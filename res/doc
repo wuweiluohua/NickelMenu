@@ -23,7 +23,7 @@
 #                   dbg_error      - always returns an error (for testing)
 #                   dbg_msg        - shows a message (for testing)
 #                   dbg_toast      - shows a toast (for testing)
-#                   kfmon          - triggers a kfmon action (TODO)
+#                   kfmon          - triggers a kfmon action
 #                   nickel_setting - toggles a boolean setting
 #                   nickel_extras  - opens one of the beta features
 #                   nickel_misc    - other stuff which isn't significant enough for its own category
