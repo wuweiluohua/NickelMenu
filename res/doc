@@ -34,7 +34,7 @@
 #                   dbg_error      - the error message
 #                   dbg_msg        - the message
 #                   dbg_toast      - the message
-#                   kfmon          - TODO
+#                   kfmon          - the ID of the watched item to launch (as reported by list via kfmon-ipc)
 #                   nickel_setting - one of:
 #                                      invert      - toggles FeatureSettings.InvertScreen (all versions)
 #                                      lockscreen  - toggles PowerSettings.UnlockEnabled (4.12.12111+)
