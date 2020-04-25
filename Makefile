@@ -41,13 +41,25 @@ override CXXFLAGS += -std=gnu++11 -Wall -Wextra -Werror
 override LDFLAGS  += -Wl,--no-undefined -Wl,-rpath,/usr/local/Kobo -Wl,-rpath,/usr/local/Qt-5.2.1-arm/lib
 endif
 
+define GITIGNORE_HEAD
+# make gitignore
+
+# KDevelop
+.kdev4/
+NickelMenu.kdev4
+.kateconfig
+
+# Build artefacts
+endef
+export GITIGNORE_HEAD
+
 all: src/libnm.so
 
 clean:
 	rm -f $(GENERATED)
 
 gitignore:
-	echo '# make gitignore' > .gitignore
+	echo "$${GITIGNORE_HEAD}" > .gitignore
 	echo '$(GENERATED)' | \
 		sed 's/ /\n/g' | \
 		sed 's/^./\/&/' >> .gitignore

@@ -1,4 +1,11 @@
 # make gitignore
+
+# KDevelop
+.kdev4/
+NickelMenu.kdev4
+.kateconfig
+
+# Build artefacts
 /KoboRoot.tgz
 /src/libnm.so
 
@@ -15,7 +22,3 @@
 
 /src/action_cc.o
 /src/menu.o
-
-# KDevelop
-.kdev4/
-NickelMenu.kdev4
