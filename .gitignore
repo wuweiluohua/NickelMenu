@@ -5,15 +5,17 @@
 /src/qtplugin.moc
 /src/qtplugin.o
 
+/src/action.o
 /src/action_c.o
+/src/config.o
+/src/dlhook.o
 /src/failsafe.o
 /src/init.o
-/src/config.o
-/src/action.o
-/src/dlhook.o
+/src/kfmon.o
 
-/src/menu.o
 /src/action_cc.o
+/src/menu.o
+
 # KDevelop
 .kdev4/
 NickelMenu.kdev4
