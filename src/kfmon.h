@@ -21,12 +21,7 @@ extern "C" {
 #define KFMON_IPC_SOCKET "/tmp/kfmon-ipc.ctl"
 
 // read & write wrappers that Do the Right Thing.
-ssize_t xread(int fd, void* buf, size_t len);
-ssize_t xwrite(int fd, const void* buf, size_t len);
-ssize_t read_in_full(int fd, void* buf, size_t count);
-ssize_t write_in_full(int fd, const void* buf, size_t count);
-
-int handle_reply(int data_fd);
+#include "helpers.h"
 
 // Flags for the failure bingo bitmask
 #define KFMON_IPC_ETIMEDOUT                (1 << 1)
@@ -44,6 +39,9 @@ int handle_reply(int data_fd);
 // Not an error ;p
 //#define KFMON_IPC_OK
 #define KFMON_IPC_UNKNOWN_REPLY            (1 << 12)
+
+// Small private helpers involved in KFMon IPC
+#include "kfmon.c"
 
 #ifdef __cplusplus
 }
