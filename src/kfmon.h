@@ -17,6 +17,8 @@ extern "C" {
 #include <signal.h>
 #include <poll.h>
 
+#include "action.h"
+
 // Path to our IPC Unix socket
 #define KFMON_IPC_SOCKET "/tmp/kfmon-ipc.ctl"
 
@@ -40,8 +42,8 @@ extern "C" {
 //#define KFMON_IPC_OK
 #define KFMON_IPC_UNKNOWN_REPLY            (1 << 12)
 
-// Small private helpers involved in KFMon IPC
-#include "kfmon.c"
+// Handle a KFMon IPC request
+nm_action_result_t* nm_kfmon_request(const char *ipc_cmd, const char *ipc_arg, char **err_out);
 
 #ifdef __cplusplus
 }
