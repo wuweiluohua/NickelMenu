@@ -20,9 +20,6 @@ extern "C" {
 // Path to our IPC Unix socket
 #define KFMON_IPC_SOCKET "/tmp/kfmon-ipc.ctl"
 
-// We want to return negative values on failure, always
-#define ERRCODE(e) (-(e))
-
 // read & write wrappers that Do the Right Thing.
 ssize_t xread(int fd, void* buf, size_t len);
 ssize_t xwrite(int fd, const void* buf, size_t len);
