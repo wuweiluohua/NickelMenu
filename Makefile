@@ -35,7 +35,6 @@ $(call pkgconf,QT5WIDGETS,Qt5Widgets)
 CFLAGS   ?= -O2 -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard -mthumb
 CXXFLAGS ?= -O2 -march=armv7-a -mtune=cortex-a8 -mfpu=neon -mfloat-abi=hard -mthumb
 LDFLAGS  ?= -Wl,--as-needed
-
 override CFLAGS   += -std=gnu11 -Wall -Wextra -Werror
 override CXXFLAGS += -std=gnu++11 -Wall -Wextra -Werror
 override LDFLAGS  += -Wl,--no-undefined -Wl,-rpath,/usr/local/Kobo -Wl,-rpath,/usr/local/Qt-5.2.1-arm/lib

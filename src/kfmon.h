@@ -4,26 +4,10 @@
 extern "C" {
 #endif
 
-#define _GNU_SOURCE // poll
-#include <errno.h>
-#include <linux/limits.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <unistd.h>
-#include <signal.h>
-#include <poll.h>
-
 #include "action.h"
 
 // Path to our IPC Unix socket
 #define KFMON_IPC_SOCKET "/tmp/kfmon-ipc.ctl"
-
-// read & write wrappers that Do the Right Thing.
-#include "helpers.h"
 
 // Flags for the failure bingo bitmask
 #define KFMON_IPC_ETIMEDOUT                (1 << 1)

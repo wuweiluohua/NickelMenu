@@ -1,4 +1,5 @@
 #include "util.h"
+#include "kfmon_priv.h"
 #include "kfmon.h"
 
 // Handle replies from the IPC socket
