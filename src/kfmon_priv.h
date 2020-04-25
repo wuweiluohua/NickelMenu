@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#define _GNU_SOURCE // poll
+#define _GNU_SOURCE
 #include <errno.h>
 #include <linux/limits.h>
 #include <stdbool.h>
@@ -14,7 +14,6 @@ extern "C" {
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <signal.h>
 #include <poll.h>
 
 // read & write wrappers that Do the Right Thing.
