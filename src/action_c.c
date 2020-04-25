@@ -96,9 +96,12 @@ NM_ACTION_(kfmon) {
                         if (reply == KFMON_IPC_READ_FAILURE) {
                             // We failed to read the reply
                             failed |= KFMON_IPC_READ_FAILURE;
-                        } else {
+                        } else if (reply == EXIT_FAILURE) {
                             // There wasn't actually any data!
                             failed |= KFMON_IPC_ENODATA;
+                        } else {
+                            // That's an IPC-specific failure, pass it as-is
+                            failed |= reply;
                         }
                     }
                     // We're obviously done if something went wrong.
@@ -143,6 +146,22 @@ NM_ACTION_(kfmon) {
         } else if (failed & KFMON_IPC_READ_FAILURE) {
             // NOTE: We probably can't salvage errno here, because we're behind close() :/
             NM_RETURN_ERR("Failed to read KFMon's reply");
+        } else if (failed & KFMON_IPC_ERR_INVALID_ID) {
+            NM_RETURN_ERR("Requested to start an invalid watch index");
+        } else if (failed & KFMON_IPC_WARN_ALREADY_RUNNING) {
+            NM_RETURN_ERR("Requested watch is already running");
+        } else if (failed & KFMON_IPC_WARN_SPAWN_BLOCKED) {
+            NM_RETURN_ERR("A spawn blocker is currently running");
+        } else if (failed & KFMON_IPC_WARN_SPAWN_INHIBITED) {
+            NM_RETURN_ERR("Spawns are currently inhibited");
+        } else if (failed & KFMON_IPC_ERR_REALLY_MALFORMED_CMD) {
+            NM_RETURN_ERR("KFMon couldn't parse our command");
+        } else if (failed & KFMON_IPC_ERR_MALFORMED_CMD) {
+            NM_RETURN_ERR("Bad command syntax");
+        } else if (failed & KFMON_IPC_ERR_INVALID_CMD) {
+            NM_RETURN_ERR("Command wasn't recognized by KFMon");
+        } else if (failed & KFMON_IPC_UNKNOWN_REPLY) {
+            NM_RETURN_ERR("We couldn't make sense of KFMon's reply");
         } else {
             // Should never happen
             NM_RETURN_ERR("Something went wrong");
