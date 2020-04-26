@@ -159,6 +159,7 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
 
     int data_fd = -1;
     // Attempt to connect to KFMon...
+    // As long as KFMon is up, has very little chance to fail, even if the connection backlog is full.
     failed = connect_to_kfmon_socket(&data_fd);
     // If it failed, return early
     if (failed != EXIT_SUCCESS) {
@@ -177,7 +178,8 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
     }
 
     // We'll be polling the socket for a reply, this'll make things neater, and allows us to abort on timeout,
-    // in the unlickely event there's already an IPC session being handled by KFMon...
+    // in the unlickely event there's already an IPC session being handled by KFMon,
+    // in which case the reply would be delayed by an undeterminate amount of time (i.e., until KFMon gets to it).
     // Timeout after 2s
     failed = wait_for_reply(data_fd, 500, 4);
     // NOTE: We happen to be done with the connection right now.
