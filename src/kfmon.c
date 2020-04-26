@@ -45,11 +45,10 @@ static int handle_reply(int data_fd) {
     return EXIT_SUCCESS;
 }
 
-// Handle a simple KFMon IPC request
-int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
+// Connect to KFMon's IPC socket. Returns error code, store data fd by ref.
+static int connect_to_kfmon_socket(int *data_fd) {
     // Setup the local socket
-    int data_fd = -1;
-    if ((data_fd = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0)) == -1) {
+    if ((*data_fd = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0)) == -1) {
         return KFMON_IPC_SOCKET_FAILURE;
     }
 
@@ -58,19 +57,48 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
     strncpy(sock_name.sun_path, KFMON_IPC_SOCKET, sizeof(sock_name.sun_path) - 1);
 
     // Connect to IPC socket
-    if (connect(data_fd, (const struct sockaddr*) &sock_name, sizeof(sock_name)) == -1) {
+    if (connect(*data_fd, (const struct sockaddr*) &sock_name, sizeof(sock_name)) == -1) {
         return KFMON_IPC_CONNECT_FAILURE;
+    }
+
+    // Wheee!
+    return EXIT_SUCCESS;
+}
+
+// Send a packet to KFMon over the wire (payload *MUST* be NUL-terminated, and len *MUST* include that NUL).
+static int send_packet(int data_fd, const char* payload, size_t len) {
+    // Send it (w/ a NUL)
+    if (write_in_full(data_fd, payload, len) < 0) {
+        // Only actual failures are left, xwrite handles the rest
+        return KFMON_IPC_WRITE_FAILURE;
+    }
+
+    // Wheee!
+    return EXIT_SUCCESS;
+}
+
+// Handle a simple KFMon IPC request
+int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
+    // Assume everything's peachy until shit happens...
+    int failed = EXIT_SUCCESS;
+
+    int data_fd = -1;
+    // Attempt to connect to KFMon...
+    failed = connect_to_kfmon_socket(&data_fd);
+    // If it failed, return early
+    if (failed != EXIT_SUCCESS) {
+        return failed;
     }
 
     // Attempt to send the specified command in full over the wire
     char buf[PIPE_BUF] = { 0 };
     int packet_len = snprintf(buf, sizeof(buf), "%s:%s", ipc_cmd, ipc_arg);
     // Send it (w/ a NUL)
-    if (write_in_full(data_fd, buf, (size_t)(packet_len + 1)) < 0) {
-        // Only actual failures are left, xwrite handles the rest
-        // Don't forget to close the socket...
+    failed = send_packet(data_fd, buf, (size_t) (packet_len + 1));
+    // If it failed, return early, after closing the socket
+    if (failed != EXIT_SUCCESS) {
         close(data_fd);
-        return KFMON_IPC_WRITE_FAILURE;
+        return failed;
     }
 
     // We'll be polling the socket for a reply, this'll make things neater, and allows us to abort on timeout,
@@ -80,9 +108,6 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
     // Data socket
     pfd.fd     = data_fd;
     pfd.events = POLLIN;
-
-    // Assume everything's peachy until shit happens...
-    int failed = EXIT_SUCCESS;
 
     // Here goes...
     while (1) {
