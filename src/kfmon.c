@@ -46,7 +46,7 @@ static int handle_reply(int data_fd) {
 }
 
 // Connect to KFMon's IPC socket. Returns error code, store data fd by ref.
-static int connect_to_kfmon_socket(int *data_fd) {
+static int connect_to_kfmon_socket(int *restrict data_fd) {
     // Setup the local socket
     if ((*data_fd = socket(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0)) == -1) {
         return KFMON_IPC_SOCKET_FAILURE;
@@ -66,7 +66,7 @@ static int connect_to_kfmon_socket(int *data_fd) {
 }
 
 // Send a packet to KFMon over the wire (payload *MUST* be NUL-terminated to avoid truncation, and len *MUST* include that NUL).
-static int send_packet(int data_fd, const char* payload, size_t len) {
+static int send_packet(int data_fd, const char *restrict payload, size_t len) {
     // Send it (w/ a NUL)
     if (write_in_full(data_fd, payload, len) < 0) {
         // Only actual failures are left, xwrite handles the rest
@@ -78,7 +78,7 @@ static int send_packet(int data_fd, const char* payload, size_t len) {
 }
 
 // Send the requested IPC command:arg pair
-static int send_ipc_command(int data_fd, const char *ipc_cmd, const char *ipc_arg) {
+static int send_ipc_command(int data_fd, const char *restrict ipc_cmd, const char *restrict ipc_arg) {
     char buf[256] = { 0 };
     int packet_len = snprintf(buf, sizeof(buf), "%s:%s", ipc_cmd, ipc_arg);
     // Send it (w/ a NUL)
@@ -161,7 +161,7 @@ static int wait_for_reply(int data_fd, int timeout, size_t retries) {
 }
 
 // Handle a simple KFMon IPC request
-int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
+int nm_kfmon_simple_request(const char *restrict ipc_cmd, const char *restrict ipc_arg) {
     // Assume everything's peachy until shit happens...
     int status = EXIT_SUCCESS;
 

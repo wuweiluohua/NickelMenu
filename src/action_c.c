@@ -40,4 +40,3 @@ NM_ACTION_(kfmon) {
     int status = nm_kfmon_simple_request("trigger", arg);
     return nm_kfmon_return_handler(status, err_out);
 }
-

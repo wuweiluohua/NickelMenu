@@ -36,7 +36,7 @@ extern "C" {
 nm_action_result_t* nm_kfmon_return_handler(int error, char **err_out);
 
 // Send a simple KFMon IPC request, one where the reply is only used for its diagnostic value.
-int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg);
+int nm_kfmon_simple_request(const char *restrict ipc_cmd, const char *restrict ipc_arg);
 
 #ifdef __cplusplus
 }
