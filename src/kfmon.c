@@ -77,32 +77,10 @@ static int send_packet(int data_fd, const char* payload, size_t len) {
     return EXIT_SUCCESS;
 }
 
-// Handle a simple KFMon IPC request
-int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
-    // Assume everything's peachy until shit happens...
+// Poll the IPC socket for a *single* reply, timeout after retries * timeout (ms)
+static int wait_for_reply(int data_fd, int timeout, int retries) {
     int failed = EXIT_SUCCESS;
 
-    int data_fd = -1;
-    // Attempt to connect to KFMon...
-    failed = connect_to_kfmon_socket(&data_fd);
-    // If it failed, return early
-    if (failed != EXIT_SUCCESS) {
-        return failed;
-    }
-
-    // Attempt to send the specified command in full over the wire
-    char buf[PIPE_BUF] = { 0 };
-    int packet_len = snprintf(buf, sizeof(buf), "%s:%s", ipc_cmd, ipc_arg);
-    // Send it (w/ a NUL)
-    failed = send_packet(data_fd, buf, (size_t) (packet_len + 1));
-    // If it failed, return early, after closing the socket
-    if (failed != EXIT_SUCCESS) {
-        close(data_fd);
-        return failed;
-    }
-
-    // We'll be polling the socket for a reply, this'll make things neater, and allows us to abort on timeout,
-    // in the unlickely event there's already an IPC session being handled by KFMon...
     int       poll_num;
     struct pollfd pfd = { 0 };
     // Data socket
@@ -111,15 +89,13 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
 
     // Here goes...
     while (1) {
-        // We'll wait for a few short windows of 500ms
-        size_t retries = 0U;
-        poll_num = poll(&pfd, 1, 500);
+        // We'll wait for <retries> windows of <timeout>ms
+        size_t retry = 0U;
+        poll_num = poll(&pfd, 1, timeout);
         if (poll_num == -1) {
             if (errno == EINTR) {
                 continue;
             }
-            // Don't forget to close the socket...
-            close(data_fd);
             return KFMON_IPC_POLL_FAILURE;
         }
 
@@ -148,6 +124,7 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
                     break;
                 } else {
                     // We break on success, too, as we only need to send a single command.
+                    failed = EXIT_SUCCESS;
                     break;
                 }
             }
@@ -162,19 +139,52 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
 
         if (poll_num == 0) {
             // Timed out, increase the retry counter
-            retries++;
+            retry++;
         }
 
-        // Drop the axe after 2s.
-        if (retries >= 4) {
+        // Drop the axe after the final timeout
+        if (retry >= retries) {
             failed = KFMON_IPC_ETIMEDOUT;
             break;
         }
     }
 
+    return failed;
+}
+
+// Handle a simple KFMon IPC request
+int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
+    // Assume everything's peachy until shit happens...
+    int failed = EXIT_SUCCESS;
+
+    int data_fd = -1;
+    // Attempt to connect to KFMon...
+    failed = connect_to_kfmon_socket(&data_fd);
+    // If it failed, return early
+    if (failed != EXIT_SUCCESS) {
+        return failed;
+    }
+
+    // Attempt to send the specified command in full over the wire
+    char buf[PIPE_BUF] = { 0 };
+    int packet_len = snprintf(buf, sizeof(buf), "%s:%s", ipc_cmd, ipc_arg);
+    // Send it (w/ a NUL)
+    failed = send_packet(data_fd, buf, (size_t) (packet_len + 1));
+    // If it failed, return early, after closing the socket
+    if (failed != EXIT_SUCCESS) {
+        close(data_fd);
+        return failed;
+    }
+
+    // We'll be polling the socket for a reply, this'll make things neater, and allows us to abort on timeout,
+    // in the unlickely event there's already an IPC session being handled by KFMon...
+    // Timeout after 2s
+    failed = wait_for_reply(data_fd, 500, 4);
+    // NOTE: We happen to be done with the connection right now.
+    //       But if we still needed it, KFMON_IPC_POLL_FAILURE would warrant an early abort w/ a forced close().
+
     // Bye now!
     close(data_fd);
-
     return failed;
 }
 
