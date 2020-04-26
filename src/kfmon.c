@@ -87,7 +87,7 @@ static int send_ipc_command(int data_fd, const char *ipc_cmd, const char *ipc_ar
 
 // Poll the IPC socket for a *single* reply, timeout after retries * timeout (ms)
 static int wait_for_reply(int data_fd, int timeout, size_t retries) {
-    int failed = EXIT_SUCCESS;
+    int status = EXIT_SUCCESS;
 
     int       poll_num;
     struct pollfd pfd = { 0 };
@@ -115,24 +115,24 @@ static int wait_for_reply(int data_fd, int timeout, size_t retries) {
                     // If the remote closed the connection, we get POLLIN|POLLHUP w/ EoF ;).
                     if (pfd.revents & POLLHUP) {
                         // Flag that as an error
-                        failed = KFMON_IPC_EPIPE;
+                        status = KFMON_IPC_EPIPE;
                     } else {
                         if (reply == KFMON_IPC_REPLY_READ_FAILURE) {
                             // We failed to read the reply
-                            failed = KFMON_IPC_REPLY_READ_FAILURE;
+                            status = KFMON_IPC_REPLY_READ_FAILURE;
                         } else if (reply == EXIT_FAILURE) {
                             // There wasn't actually any data!
-                            failed = KFMON_IPC_ENODATA;
+                            status = KFMON_IPC_ENODATA;
                         } else {
                             // That's an IPC-specific failure, pass it as-is
-                            failed = reply;
+                            status = reply;
                         }
                     }
                     // We're obviously done if something went wrong.
                     break;
                 } else {
                     // We break on success, too, as we only need to send a single command.
-                    failed = EXIT_SUCCESS;
+                    status = EXIT_SUCCESS;
                     break;
                 }
             }
@@ -140,7 +140,7 @@ static int wait_for_reply(int data_fd, int timeout, size_t retries) {
             // Remote closed the connection
             if (pfd.revents & POLLHUP) {
                 // Flag that as an error
-                failed = KFMON_IPC_EPIPE;
+                status = KFMON_IPC_EPIPE;
                 break;
             }
         }
@@ -152,47 +152,47 @@ static int wait_for_reply(int data_fd, int timeout, size_t retries) {
 
         // Drop the axe after the final timeout
         if (retry >= retries) {
-            failed = KFMON_IPC_ETIMEDOUT;
+            status = KFMON_IPC_ETIMEDOUT;
             break;
         }
     }
 
-    return failed;
+    return status;
 }
 
 // Handle a simple KFMon IPC request
 int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
     // Assume everything's peachy until shit happens...
-    int failed = EXIT_SUCCESS;
+    int status = EXIT_SUCCESS;
 
     int data_fd = -1;
     // Attempt to connect to KFMon...
     // As long as KFMon is up, has very little chance to fail, even if the connection backlog is full.
-    failed = connect_to_kfmon_socket(&data_fd);
+    status = connect_to_kfmon_socket(&data_fd);
     // If it failed, return early
-    if (failed != EXIT_SUCCESS) {
-        return failed;
+    if (status != EXIT_SUCCESS) {
+        return status;
     }
 
     // Attempt to send the specified command in full over the wire
-    failed = send_ipc_command(data_fd, ipc_cmd, ipc_arg);
+    status = send_ipc_command(data_fd, ipc_cmd, ipc_arg);
     // If it failed, return early, after closing the socket
-    if (failed != EXIT_SUCCESS) {
+    if (status != EXIT_SUCCESS) {
         close(data_fd);
-        return failed;
+        return status;
     }
 
     // We'll be polling the socket for a reply, this'll make things neater, and allows us to abort on timeout,
     // in the unlikely event there's already an IPC session being handled by KFMon,
     // in which case the reply would be delayed by an undeterminate amount of time (i.e., until KFMon gets to it).
     // Here, we'll want to timeout after 2s
-    failed = wait_for_reply(data_fd, 500, 4);
+    status = wait_for_reply(data_fd, 500, 4);
     // NOTE: We happen to be done with the connection right now.
     //       But if we still needed it, KFMON_IPC_POLL_FAILURE would warrant an early abort w/ a forced close().
 
     // Bye now!
     close(data_fd);
-    return failed;
+    return status;
 }
 
 // Giant ladder of fail
