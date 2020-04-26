@@ -30,20 +30,14 @@ NM_ACTION_(dbg_toast) {
 }
 
 NM_ACTION_(kfmon_id) {
-    #define NM_ERR_RET NULL
-
     // Start by watch ID (simpler, but IDs may not be stable across a single power cycle, given severe KFMon config shuffling)
-    return nm_kfmon_request("start", arg, err_out);
-
-    #undef NM_ERR_RET
+    int error = nm_kfmon_simple_request("start", arg);
+    return nm_kfmon_return_handler(error, err_out);
 }
 
 NM_ACTION_(kfmon) {
-    #define NM_ERR_RET NULL
-
     // Trigger a watch, given its trigger basename. Stable runtime lookup done by KFMon.
-    return nm_kfmon_request("trigger", arg, err_out);
-
-    #undef NM_ERR_RET
+    int error = nm_kfmon_simple_request("trigger", arg);
+    return nm_kfmon_return_handler(error, err_out);
 }
 
