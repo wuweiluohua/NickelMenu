@@ -85,8 +85,8 @@ static int send_ipc_command(int data_fd, const char *restrict ipc_cmd, const cha
     return send_packet(data_fd, buf, (size_t) (packet_len + 1));
 }
 
-// Poll the IPC socket for a *single* reply, timeout after retries * timeout (ms)
-static int wait_for_reply(int data_fd, int timeout, size_t retries) {
+// Poll the IPC socket for a *single* reply, timeout after attempts * timeout (ms)
+static int wait_for_reply(int data_fd, int timeout, size_t attempts) {
     int status = EXIT_SUCCESS;
 
     int       poll_num;
@@ -95,10 +95,9 @@ static int wait_for_reply(int data_fd, int timeout, size_t retries) {
     pfd.fd     = data_fd;
     pfd.events = POLLIN;
 
-    // Here goes...
+    // Here goes... We'll wait for <attempts> windows of <timeout>ms
+    size_t retry = 0U;
     while (1) {
-        // We'll wait for <retries> windows of <timeout>ms
-        size_t retry = 0U;
         poll_num = poll(&pfd, 1, timeout);
         if (poll_num == -1) {
             if (errno == EINTR) {
@@ -150,8 +149,8 @@ static int wait_for_reply(int data_fd, int timeout, size_t retries) {
             retry++;
         }
 
-        // Drop the axe after the final timeout
-        if (retry >= retries) {
+        // Drop the axe after the final attempt
+        if (retry >= attempts) {
             status = KFMON_IPC_ETIMEDOUT;
             break;
         }
