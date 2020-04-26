@@ -78,7 +78,7 @@ static int send_packet(int data_fd, const char* payload, size_t len) {
 }
 
 // Poll the IPC socket for a *single* reply, timeout after retries * timeout (ms)
-static int wait_for_reply(int data_fd, int timeout, int retries) {
+static int wait_for_reply(int data_fd, int timeout, size_t retries) {
     int failed = EXIT_SUCCESS;
 
     int       poll_num;
