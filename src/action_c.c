@@ -41,7 +41,7 @@ NM_ACTION_(kfmon_id) {
 NM_ACTION_(kfmon) {
     #define NM_ERR_RET NULL
 
-    // Trigger a watch, given it's trigger basename. Stable runtime lookup done by KFMon.
+    // Trigger a watch, given its trigger basename. Stable runtime lookup done by KFMon.
     return nm_kfmon_request("trigger", arg, err_out);
 
     #undef NM_ERR_RET
