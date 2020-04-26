@@ -89,7 +89,6 @@ static int send_ipc_command(int data_fd, const char *restrict ipc_cmd, const cha
 static int wait_for_reply(int data_fd, int timeout, size_t attempts) {
     int status = EXIT_SUCCESS;
 
-    int       poll_num;
     struct pollfd pfd = { 0 };
     // Data socket
     pfd.fd     = data_fd;
@@ -98,7 +97,7 @@ static int wait_for_reply(int data_fd, int timeout, size_t attempts) {
     // Here goes... We'll wait for <attempts> windows of <timeout>ms
     size_t retry = 0U;
     while (1) {
-        poll_num = poll(&pfd, 1, timeout);
+        int poll_num = poll(&pfd, 1, timeout);
         if (poll_num == -1) {
             if (errno == EINTR) {
                 continue;
