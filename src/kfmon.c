@@ -65,7 +65,7 @@ static int connect_to_kfmon_socket(int *data_fd) {
     return EXIT_SUCCESS;
 }
 
-// Send a packet to KFMon over the wire (payload *MUST* be NUL-terminated, and len *MUST* include that NUL).
+// Send a packet to KFMon over the wire (payload *MUST* be NUL-terminated to avoid truncation, and len *MUST* include that NUL).
 static int send_packet(int data_fd, const char* payload, size_t len) {
     // Send it (w/ a NUL)
     if (write_in_full(data_fd, payload, len) < 0) {
