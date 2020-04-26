@@ -82,7 +82,7 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
     pfd.events = POLLIN;
 
     // Assume everything's peachy until shit happens...
-    int failed = 0;
+    int failed = EXIT_SUCCESS;
 
     // Here goes...
     while (1) {
@@ -106,17 +106,17 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
                     // If the remote closed the connection, we get POLLIN|POLLHUP w/ EoF ;).
                     if (pfd.revents & POLLHUP) {
                         // Flag that as an error
-                        failed |= KFMON_IPC_EPIPE;
+                        failed = KFMON_IPC_EPIPE;
                     } else {
                         if (reply == KFMON_IPC_REPLY_READ_FAILURE) {
                             // We failed to read the reply
-                            failed |= KFMON_IPC_REPLY_READ_FAILURE;
+                            failed = KFMON_IPC_REPLY_READ_FAILURE;
                         } else if (reply == EXIT_FAILURE) {
                             // There wasn't actually any data!
-                            failed |= KFMON_IPC_ENODATA;
+                            failed = KFMON_IPC_ENODATA;
                         } else {
                             // That's an IPC-specific failure, pass it as-is
-                            failed |= reply;
+                            failed = reply;
                         }
                     }
                     // We're obviously done if something went wrong.
@@ -130,7 +130,7 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
             // Remote closed the connection
             if (pfd.revents & POLLHUP) {
                 // Flag that as an error
-                failed |= KFMON_IPC_EPIPE;
+                failed = KFMON_IPC_EPIPE;
                 break;
             }
         }
@@ -142,7 +142,7 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
 
         // Drop the axe after 2s.
         if (retries >= 4) {
-            failed |= KFMON_IPC_ETIMEDOUT;
+            failed = KFMON_IPC_ETIMEDOUT;
             break;
         }
     }
@@ -153,6 +153,7 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
     return failed;
 }
 
+// Giant ladder of fail
 nm_action_result_t* nm_kfmon_return_handler(int error, char **err_out) {
     #define NM_ERR_RET NULL
 
