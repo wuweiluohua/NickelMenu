@@ -29,7 +29,7 @@ NM_ACTION_(dbg_toast) {
     #undef NM_ERR_RET
 }
 
-NM_ACTION_(kfmon) {
+NM_ACTION_(kfmon_id) {
     #define NM_ERR_RET NULL
 
     // Start by watch ID
@@ -37,3 +37,13 @@ NM_ACTION_(kfmon) {
 
     #undef NM_ERR_RET
 }
+
+NM_ACTION_(kfmon) {
+    #define NM_ERR_RET NULL
+
+    // Start by watch ID
+    return nm_kfmon_request("trigger", arg, err_out);
+
+    #undef NM_ERR_RET
+}
+
