@@ -77,6 +77,14 @@ static int send_packet(int data_fd, const char* payload, size_t len) {
     return EXIT_SUCCESS;
 }
 
+// Send the requested IPC command:arg pair
+static int send_ipc_command(int data_fd, const char *ipc_cmd, const char *ipc_arg) {
+    char buf[256] = { 0 };
+    int packet_len = snprintf(buf, sizeof(buf), "%s:%s", ipc_cmd, ipc_arg);
+    // Send it (w/ a NUL)
+    return send_packet(data_fd, buf, (size_t) (packet_len + 1));
+}
+
 // Poll the IPC socket for a *single* reply, timeout after retries * timeout (ms)
 static int wait_for_reply(int data_fd, int timeout, size_t retries) {
     int failed = EXIT_SUCCESS;
@@ -167,10 +175,7 @@ int nm_kfmon_simple_request(const char *ipc_cmd, const char *ipc_arg) {
     }
 
     // Attempt to send the specified command in full over the wire
-    char buf[PIPE_BUF] = { 0 };
-    int packet_len = snprintf(buf, sizeof(buf), "%s:%s", ipc_cmd, ipc_arg);
-    // Send it (w/ a NUL)
-    failed = send_packet(data_fd, buf, (size_t) (packet_len + 1));
+    failed = send_ipc_command(data_fd, ipc_cmd, ipc_arg);
     // If it failed, return early, after closing the socket
     if (failed != EXIT_SUCCESS) {
         close(data_fd);
