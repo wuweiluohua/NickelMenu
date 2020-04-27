@@ -71,7 +71,7 @@ static int connect_to_kfmon_socket(int *restrict data_fd) {
 // Returns EPIPE if remote has closed the connection
 // Returns EXIT_SUCCESS if remote is ready for us
 // Returns EXIT_FAILURE if poll failed unexpectedly, check errno
-int can_write_to_socket(int data_fd, int timeout, size_t attempts) {
+static int can_write_to_socket(int data_fd, int timeout, size_t attempts) {
     int           status = EXIT_SUCCESS;
     struct pollfd pfd    = { 0 };
     pfd.fd               = data_fd;
