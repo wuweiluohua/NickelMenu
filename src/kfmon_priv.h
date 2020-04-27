@@ -16,11 +16,14 @@ extern "C" {
 #include <unistd.h>
 #include <poll.h>
 
-// read & write wrappers that Do the Right Thing.
+// Simple read/write wrappers with retries on recoverable errors
 static ssize_t xread(int fd, void* buf, size_t len);
-static ssize_t xwrite(int fd, const void* buf, size_t len);
-//static ssize_t read_in_full(int fd, void* buf, size_t count);
-static ssize_t write_in_full(int fd, const void* buf, size_t count);
+//static ssize_t xwrite(int fd, const void* buf, size_t len);
+// Ensure all of data on socket comes through.
+//static ssize_t read_in_full(int fd, void* buf, size_t len);
+//static ssize_t write_in_full(int fd, const void* buf, size_t len);
+// This sets MSG_NOSIGNAL, so you *must* handle EPIPE!
+static ssize_t send_in_full(int sockfd, const void* buf, size_t len);
 #include "helpers.h"
 
 #ifdef __cplusplus
