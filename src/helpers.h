@@ -35,7 +35,7 @@
 //       c.f., https://github.com/git/git/blob/master/wrapper.c
 //             https://git.savannah.gnu.org/cgit/gnulib.git/tree/lib/safe-read.c
 //             https://git.savannah.gnu.org/cgit/gnulib.git/tree/lib/full-write.c
-//             https://git.busybox.net/busybox/tree/libbb/read.c?h=1_31_stable
+//             https://git.busybox.net/busybox/tree/libbb/read.c
 
 #include <errno.h>
 #include <limits.h>
@@ -115,13 +115,13 @@ static ssize_t xwrite(int fd, const void* buf, size_t len) {
 // Ensure all of data on socket comes through.
 /*
 static ssize_t read_in_full(int fd, void* buf, size_t len) {
-    // Save a trip to EINVAL if len is large enough to make write() fail.
+    // Save a trip to EINVAL if len is large enough to make read() fail.
     if (len > MAX_IO_BUFSIZ) {
         len = MAX_IO_BUFSIZ;
     }
 
     char*  s   = buf;
-    size_t pos = 0;
+    size_t pos = 0U;
     while (len > pos) {
         ssize_t nr = read(fd, s + pos, len - pos);
         switch (nr) {
@@ -157,7 +157,7 @@ static ssize_t write_in_full(int fd, const void* buf, size_t len) {
     }
 
     const char* s   = buf;
-    size_t      pos = 0;
+    size_t      pos = 0U;
     while (len > pos) {
         ssize_t nw = write(fd, s + pos, len - pos);
         switch (nw) {
@@ -189,13 +189,13 @@ static ssize_t write_in_full(int fd, const void* buf, size_t len) {
 // Exactly like write_in_full, but using send w/ flags set to MSG_NOSIGNAL,
 // so we can handle EPIPE without having to deal with signals.
 static ssize_t send_in_full(int sockfd, const void* buf, size_t len) {
-    // Save a trip to EINVAL if len is large enough to make write() fail.
+    // Save a trip to EINVAL if len is large enough to make send() fail.
     if (len > MAX_IO_BUFSIZ) {
         len = MAX_IO_BUFSIZ;
     }
 
     const char* s   = buf;
-    size_t      pos = 0;
+    size_t      pos = 0U;
     while (len > pos) {
         ssize_t nw = send(sockfd, s + pos, len - pos, MSG_NOSIGNAL);
         switch (nw) {
