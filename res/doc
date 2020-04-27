@@ -34,7 +34,9 @@
 #                   dbg_error      - the error message
 #                   dbg_msg        - the message
 #                   dbg_toast      - the message
-#                   kfmon          - the filename of the watched item to launch (as reported by list via kfmon-ipc, it's the basename of the watch's filename in the KFMon config)
+#                   kfmon          - the filename of the KFMon watched item to launch.
+#                                    This is actually the basename of the watch's filename as specified in its KFMon config.
+#                                    You can also check the output of the 'list' command via the kfmon-ipc tool.
 #                   nickel_setting - one of:
 #                                      invert      - toggles FeatureSettings.InvertScreen (all versions)
 #                                      lockscreen  - toggles PowerSettings.UnlockEnabled (4.12.12111+)
@@ -77,4 +79,4 @@
 # To uninstall NickelMenu, create a file named KOBOeReader/.adds/nm/uninstall,
 # or manually uninstall it by deleting libnm.so. You can also uninstall it by
 # triggering the failsafe mechanism by turning your Kobo off within 20 seconds
-# of turning it on. 
+# of turning it on.
