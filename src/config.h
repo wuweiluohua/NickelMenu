@@ -9,7 +9,7 @@ extern "C" {
 
 typedef struct nm_config_t nm_config_t;
 
-// nm_config_parse parses the configuration files in /mnt/onboard/.adds/nm.
+// nm_config_parse parses the configuration files in /mnt/onboard/.adds/nm
 // An error is returned if there are syntax errors, file access errors, or
 // invalid action names for menu_item.
 nm_config_t *nm_config_parse(char **err_out);

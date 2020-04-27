@@ -6,7 +6,7 @@ extern "C" {
 
 #include "action.h"
 
-// Path to our IPC Unix socket
+// Path to KFMon's IPC Unix socket
 #define KFMON_IPC_SOCKET "/tmp/kfmon-ipc.ctl"
 
 // Flags for the failure bingo bitmask
@@ -32,7 +32,7 @@ extern "C" {
 //#define KFMON_IPC_OK
 #define KFMON_IPC_UNKNOWN_REPLY            (1 << 17)
 
-// Given one of the error code listed above, return properly from an action. Success is silent.
+// Given one of the error codes listed above, return properly from an action. Success is silent.
 nm_action_result_t* nm_kfmon_return_handler(int error, char **err_out);
 
 // Send a simple KFMon IPC request, one where the reply is only used for its diagnostic value.

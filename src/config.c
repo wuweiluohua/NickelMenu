@@ -35,7 +35,7 @@ struct nm_config_t {
     nm_config_t *next;
 };
 
-// strtrim trims ASCII whitespace in-place (i.e. don't give it a string literal)
+// strtrim trims ASCII whitespace in-place (i.e., don't give it a string literal)
 // from the left/right of the string.
 static char *strtrim(char *s){
     if (!s) return NULL;
