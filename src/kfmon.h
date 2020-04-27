@@ -15,7 +15,7 @@ extern "C" {
 #define KFMON_IPC_ENODATA                  (1 << 3)
 // syscall failures
 #define KFMON_IPC_READ_FAILURE             (1 << 4)
-#define KFMON_IPC_WRITE_FAILURE            (1 << 5)
+#define KFMON_IPC_SEND_FAILURE             (1 << 5)
 #define KFMON_IPC_SOCKET_FAILURE           (1 << 6)
 #define KFMON_IPC_CONNECT_FAILURE          (1 << 7)
 #define KFMON_IPC_POLL_FAILURE             (1 << 8)

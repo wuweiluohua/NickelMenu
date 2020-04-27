@@ -65,79 +65,16 @@ static int connect_to_kfmon_socket(int *restrict data_fd) {
     return EXIT_SUCCESS;
 }
 
-// Check that we can still write to the socket (i.e., that the remote hasn't closed the socket early).
-// Returns ETIMEDOUT if it's not ready after <attempts> * <timeout>ms
-//   Set timeout to -1 and attempts to > 0 to wait indefinitely.
-// Returns EPIPE if remote has closed the connection
-// Returns EXIT_SUCCESS if remote is ready for us
-// Returns EXIT_FAILURE if poll failed unexpectedly, check errno
-static int can_write_to_socket(int data_fd, int timeout, size_t attempts) {
-    int           status = EXIT_SUCCESS;
-    struct pollfd pfd    = { 0 };
-    pfd.fd               = data_fd;
-    pfd.events           = POLLOUT;
-
-    size_t retry = 0U;
-    while (1) {
-        int poll_num = poll(&pfd, 1, timeout);
-        if (poll_num == -1) {
-            if (errno == EINTR) {
-                continue;
-            }
-            // The caller will then be free to check errno
-            status = EXIT_FAILURE;
-            break;
-        }
-
-        if (poll_num > 0) {
-            // Remote closed the connection, can't write to it anymore (even if POLLOUT is still set).
-            if (pfd.revents & POLLHUP) {
-                // That's obviously not good ;p
-                status = EPIPE;
-                break;
-            }
-
-            if (pfd.revents & POLLOUT) {
-                // Remote is ready for us, let's proceed.
-                status = EXIT_SUCCESS;
-                break;
-            }
-        }
-
-        if (poll_num == 0) {
-            // Timed out, increase the retry counter
-            retry++;
-        }
-
-        // Drop the axe after the final attempt
-        if (retry >= attempts) {
-            // Let the caller know
-            status = ETIMEDOUT;
-            break;
-        }
-    }
-
-    return status;
-}
-
 // Send a packet to KFMon over the wire (payload *MUST* be NUL-terminated to avoid truncation, and len *MUST* include that NUL).
 static int send_packet(int data_fd, const char *restrict payload, size_t len) {
-    // Check if we actually can, first
-    int status = can_write_to_socket(data_fd, 250, 4);
-    if (status != EXIT_SUCCESS) {
-        if (status == EPIPE) {
-            return KFMON_IPC_EPIPE;
-        } else if (status == ETIMEDOUT) {
-            return KFMON_IPC_ETIMEDOUT;
-        } else {
-            return KFMON_IPC_POLL_FAILURE;
-        }
-    }
-
     // Send it (w/ a NUL)
-    if (write_in_full(data_fd, payload, len) < 0) {
-        // Only actual failures are left, xwrite handles the rest
-        return KFMON_IPC_WRITE_FAILURE;
+    if (send_in_full(data_fd, payload, len) < 0) {
+        // Only actual failures are left
+        if (errno == EPIPE) {
+            return KFMON_IPC_EPIPE;
+        } else {
+            return KFMON_IPC_SEND_FAILURE;
+        }
     }
 
     // Wheee!
@@ -275,9 +212,9 @@ nm_action_result_t* nm_kfmon_return_handler(int status, char **err_out) {
         } else if (status == KFMON_IPC_READ_FAILURE) {
             // NOTE: Let's hope close() won't mangle errno...
             NM_RETURN_ERR("read: %m");
-        } else if (status == KFMON_IPC_WRITE_FAILURE) {
+        } else if (status == KFMON_IPC_SEND_FAILURE) {
             // NOTE: Let's hope close() won't mangle errno...
-            NM_RETURN_ERR("write: %m");
+            NM_RETURN_ERR("send: %m");
         } else if (status == KFMON_IPC_SOCKET_FAILURE) {
             NM_RETURN_ERR("Failed to create local KFMon IPC socket (socket: %m)");
         } else if (status == KFMON_IPC_CONNECT_FAILURE) {
