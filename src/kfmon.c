@@ -28,7 +28,7 @@ static int handle_reply(int data_fd) {
 
     // If there's actually nothing to read (EoF), abort.
     if (len == 0) {
-        return EXIT_FAILURE;
+        return KFMON_IPC_ENODATA;
     }
 
     // Check the reply for failures
@@ -49,12 +49,11 @@ static int handle_reply(int data_fd) {
     } else if (strncmp(buf, "OK", 2) == 0) {
         return EXIT_SUCCESS;
     } else {
-        // NOTE: Obviously not viable if the command was "list" ;).
         return KFMON_IPC_UNKNOWN_REPLY;
     }
 
-    // Done
-    return EXIT_SUCCESS;
+    // We're not done until we've got a reply we're satisfied with...
+    return KFMON_IPC_EAGAIN;
 }
 
 // Handle replies from a 'list' command
@@ -288,19 +287,19 @@ static int wait_for_replies(int data_fd, int timeout, size_t attempts) {
                 if (reply != EXIT_SUCCESS) {
                     // If the remote closed the connection, we get POLLIN|POLLHUP w/ EoF ;).
                     if (pfd.revents & POLLHUP) {
-                        // Flag that as an error, and break
+                        // Flag that as an error
                         status = KFMON_IPC_EPIPE;
-                        break;
                     } else {
                         if (reply == KFMON_IPC_EAGAIN) {
-                            // We may have more stuff to read, keep going.
+                            // We're expecting more stuff to read, keep going.
                             continue;
                         } else {
-                            // That's an IPC-specific failure, pass it as-is, and break.
+                            // Something went wrong when handling the reply, pass the error as-is
                             status = reply;
-                            break;
                         }
                     }
+                    // We're obviously done if something went wrong.
+                    break;
                 } else {
                     // We break on success, too, as we only need to send a single command.
                     status = EXIT_SUCCESS;
