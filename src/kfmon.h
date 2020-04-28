@@ -19,18 +19,22 @@ extern "C" {
 #define KFMON_IPC_SOCKET_FAILURE           (1 << 6)
 #define KFMON_IPC_CONNECT_FAILURE          (1 << 7)
 #define KFMON_IPC_POLL_FAILURE             (1 << 8)
-#define KFMON_IPC_REPLY_READ_FAILURE       (1 << 9)
+#define KFMON_IPC_CALLOC_FAILURE           (1 << 9)
+#define KFMON_IPC_REPLY_READ_FAILURE       (1 << 10)
+#define KFMON_IPC_LIST_PARSE_FAILURE       (1 << 11)
 // Those match the actual string sent over the wire
-#define KFMON_IPC_ERR_INVALID_ID           (1 << 10)
-#define KFMON_IPC_WARN_ALREADY_RUNNING     (1 << 11)
-#define KFMON_IPC_WARN_SPAWN_BLOCKED       (1 << 12)
-#define KFMON_IPC_WARN_SPAWN_INHIBITED     (1 << 13)
-#define KFMON_IPC_ERR_REALLY_MALFORMED_CMD (1 << 14)
-#define KFMON_IPC_ERR_MALFORMED_CMD        (1 << 15)
-#define KFMON_IPC_ERR_INVALID_CMD          (1 << 16)
+#define KFMON_IPC_ERR_INVALID_ID           (1 << 12)
+#define KFMON_IPC_WARN_ALREADY_RUNNING     (1 << 13)
+#define KFMON_IPC_WARN_SPAWN_BLOCKED       (1 << 14)
+#define KFMON_IPC_WARN_SPAWN_INHIBITED     (1 << 15)
+#define KFMON_IPC_ERR_REALLY_MALFORMED_CMD (1 << 16)
+#define KFMON_IPC_ERR_MALFORMED_CMD        (1 << 17)
+#define KFMON_IPC_ERR_INVALID_CMD          (1 << 18)
 // Not an error ;p
 //#define KFMON_IPC_OK
-#define KFMON_IPC_UNKNOWN_REPLY            (1 << 17)
+#define KFMON_IPC_UNKNOWN_REPLY            (1 << 19)
+// Not an error either, needs we have more to read...
+#define KFMON_IPC_EAGAIN                   (1 << 20)
 
 // Given one of the error codes listed above, return properly from an action. Success is silent.
 nm_action_result_t* nm_kfmon_return_handler(int error, char **err_out);
