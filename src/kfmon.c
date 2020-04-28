@@ -68,9 +68,11 @@ static int connect_to_kfmon_socket(int *restrict data_fd) {
     sock_name.sun_family         = AF_UNIX;
     strncpy(sock_name.sun_path, KFMON_IPC_SOCKET, sizeof(sock_name.sun_path) - 1);
 
-    // Connect to IPC socket
-    if (connect(*data_fd, (const struct sockaddr*) &sock_name, sizeof(sock_name)) == -1) {
-        return KFMON_IPC_CONNECT_FAILURE;
+    // Connect to IPC socket, retrying safely on EINTR (c.f., http://www.madore.org/~david/computers/connect-intr.html)
+    while (connect(*data_fd, (const struct sockaddr*) &sock_name, sizeof(sock_name)) == -1 && errno != EISCONN) {
+        if (errno != EINTR) {
+            return KFMON_IPC_CONNECT_FAILURE;
+        }
     }
 
     // Wheee!
