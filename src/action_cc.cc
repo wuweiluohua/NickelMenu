@@ -269,10 +269,6 @@ NM_ACTION_(nickel_misc) {
 NM_ACTION_(cmd_spawn) {
     #define NM_ERR_RET nullptr
     QProcess proc;
-    // Spike the environment to make it clear we're the launcher (PPID will point to sh)
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    env.insert("FROM_NICKEL", "true");
-    proc.setProcessEnvironment(env);
     uint64_t pid;
     bool ok = proc.startDetached(
         QStringLiteral("/bin/sh"),
@@ -299,10 +295,6 @@ NM_ACTION_(cmd_output) {
     NM_ASSERT(*tmp1 && !*tmp2 && timeout > 0 && timeout < 10000, "invalid timeout '%s'", tmp1);
 
     QProcess proc;
-    // Spike the environment to make it clear we're the launcher (PPID will point to sh)
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    env.insert("FROM_NICKEL", "true");
-    proc.setProcessEnvironment(env);
     proc.setProcessChannelMode(QProcess::MergedChannels);
     proc.setWorkingDirectory(QStringLiteral("/"));
     proc.start(
