@@ -27,8 +27,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
 // NOTE: Originally imported from https://github.com/openssh/openssh-portable/blob/master/atomicio.c
 //       Rejigged for my own use, with inspiration from git's own read/write wrappers,
 //       as well as gnulib's and busybox's
@@ -36,6 +34,12 @@
 //             https://git.savannah.gnu.org/cgit/gnulib.git/tree/lib/safe-read.c
 //             https://git.savannah.gnu.org/cgit/gnulib.git/tree/lib/full-write.c
 //             https://git.busybox.net/busybox/tree/libbb/read.c
+
+#ifndef NM_KFMON_HELPERS_H
+#define NM_KFMON_HELPERS_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <errno.h>
 #include <limits.h>
@@ -85,8 +89,7 @@ static ssize_t xread(int fd, void* buf, size_t len) {
 // write() with retries on recoverable errors (via polling on EAGAIN).
 // Not guaranteed to write len bytes, even on success (like write() itself).
 // Always returns write()'s return value as-is.
-/*
-static ssize_t xwrite(int fd, const void* buf, size_t len) {
+static __attribute__((unused)) ssize_t xwrite(int fd, const void* buf, size_t len) {
     // Save a trip to EINVAL if len is large enough to make write() fail.
     if (len > MAX_IO_BUFSIZ) {
         len = MAX_IO_BUFSIZ;
@@ -109,12 +112,10 @@ static ssize_t xwrite(int fd, const void* buf, size_t len) {
         return nw;
     }
 }
-*/
 
 // Based on OpenSSH's atomicio6, except we keep the return value/data type of the original call.
 // Ensure all of data on socket comes through.
-/*
-static ssize_t read_in_full(int fd, void* buf, size_t len) {
+static __attribute__((unused)) ssize_t read_in_full(int fd, void* buf, size_t len) {
     // Save a trip to EINVAL if len is large enough to make read() fail.
     if (len > MAX_IO_BUFSIZ) {
         len = MAX_IO_BUFSIZ;
@@ -147,10 +148,8 @@ static ssize_t read_in_full(int fd, void* buf, size_t len) {
     }
     return (ssize_t) pos;
 }
-*/
 
-/*
-static ssize_t write_in_full(int fd, const void* buf, size_t len) {
+static __attribute__((unused)) ssize_t write_in_full(int fd, const void* buf, size_t len) {
     // Save a trip to EINVAL if len is large enough to make write() fail.
     if (len > MAX_IO_BUFSIZ) {
         len = MAX_IO_BUFSIZ;
@@ -184,7 +183,6 @@ static ssize_t write_in_full(int fd, const void* buf, size_t len) {
     }
     return (ssize_t) pos;
 }
-*/
 
 // Exactly like write_in_full, but using send w/ flags set to MSG_NOSIGNAL,
 // so we can handle EPIPE without having to deal with signals.
@@ -217,3 +215,8 @@ static ssize_t send_in_full(int sockfd, const void* buf, size_t len) {
     }
     return (ssize_t) pos;
 }
+
+#ifdef __cplusplus
+}
+#endif
+#endif

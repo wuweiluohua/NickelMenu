@@ -1,5 +1,17 @@
+#define _GNU_SOURCE
+#include <errno.h>
+#include <poll.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/un.h>
+#include <unistd.h>
+#include <linux/limits.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+
 #include "util.h"
-#include "kfmon_priv.h"
+#include "kfmon_helpers.h"
 #include "kfmon.h"
 
 // Handle replies from the IPC socket
