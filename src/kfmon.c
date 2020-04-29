@@ -69,7 +69,7 @@ static int handle_list_reply(int data_fd) {
     int status = EXIT_SUCCESS;
 
     // We don't actually know the size of the reply, so, best effort here.
-    ssize_t len = xread(data_fd, buf, sizeof(buf));
+    ssize_t len = xread(data_fd, buf, PIPE_BUF);
     if (len < 0) {
         // Only actual failures are left, xread handles the rest
         status = KFMON_IPC_REPLY_READ_FAILURE;
@@ -101,6 +101,7 @@ static int handle_list_reply(int data_fd) {
         eot = true;
     }
 
+    NM_LOG("<<< Got a %zd bytes reply:\n%.*s", len, len, buf);
     // Now that we're sure we didn't get a wonky reply from an unrelated command, parse the list
     // NOTE: Format is:
     //       id:filename:label or id:filename for watches without a label
@@ -108,10 +109,11 @@ static int handle_list_reply(int data_fd) {
     //       filename is what we pass verbatim to a kfmon action
     //       label is our action's lbl (use filename if NULL)
     char *p = buf;
-    char *line = buf;
+    char *line = NULL;
     // Break the reply line by line
     while ((line = strsep(&p, "\n")) != NULL) {
         // Then parse each line
+        NM_LOG("Parsing line: %s\n", line);
         // NOTE: Simple syslog logging for now
         char *watch_idx = strsep(&line, ":");
         if (!watch_idx) {
@@ -125,6 +127,7 @@ static int handle_list_reply(int data_fd) {
             goto cleanup;
         }
         NM_LOG("filename: '%s'", filename);
+        // Final separator is optional, if it's not there, there's no label, use the filename instead.
         char *label = strsep(&line, ":");
         if (label) {
             NM_LOG("label: '%s'", label);
@@ -314,7 +317,7 @@ int nm_kfmon_list_request(const char *restrict foo __attribute__((unused))) {
     }
 
     // Attempt to send the specified command in full over the wire
-    status = send_ipc_command(data_fd, "list", NULL);
+    status = send_ipc_command(data_fd, "list", NULL);   // FIXME: switch to gui-list
     // If it failed, return early, after closing the socket
     if (status != EXIT_SUCCESS) {
         close(data_fd);
