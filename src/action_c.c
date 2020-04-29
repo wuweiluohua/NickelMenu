@@ -40,3 +40,10 @@ NM_ACTION_(kfmon) {
     int status = nm_kfmon_simple_request("trigger", arg);
     return nm_kfmon_return_handler(status, err_out);
 }
+
+// PoC
+NM_ACTION_(kfmon_list) {
+    // Request a list from KFMon, parses it, and send the results to syslog
+    int status = nm_kfmon_list_request();
+    return nm_kfmon_return_handler(status, err_out);
+}
