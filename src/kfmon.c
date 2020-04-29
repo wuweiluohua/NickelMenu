@@ -374,7 +374,7 @@ int nm_kfmon_list_request(const char *restrict foo __attribute__((unused))) {
     //       But if we still needed it, KFMON_IPC_POLL_FAILURE would warrant an early abort w/ a forced close().
 
     // Walk the list
-    NM_LOG("Head is now at %p", head);
+    NM_LOG("Head is still at %p", head);
     kfmon_watch_list_t* cursor = head;
     while (cursor != NULL) {
         NM_LOG("Dumping cursor %p", cursor);
