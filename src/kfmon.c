@@ -115,6 +115,11 @@ static int handle_list_reply(int data_fd) {
     while ((line = strsep(&p, "\n")) != NULL) {
         // Then parse each line
         NM_LOG("Parsing line: %s\n", line);
+        // If it's the final line, its only content is a single NUL
+        if (*line == '\0') {
+            NM_LOG("Caught the final line, eot: %d", eot);
+            break;
+        }
         // NOTE: Simple syslog logging for now
         char *watch_idx = strsep(&line, ":");
         if (!watch_idx) {
