@@ -101,6 +101,7 @@ static int handle_list_reply(int data_fd) {
         eot = true;
     }
 
+    // NOTE to self: syslog strips LF, you dummy.
     NM_LOG("<<< Got a %zd bytes reply:\n%.*s", len, len, buf);
     // Now that we're sure we didn't get a wonky reply from an unrelated command, parse the list
     // NOTE: Format is:
