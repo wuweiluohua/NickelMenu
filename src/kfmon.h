@@ -51,7 +51,8 @@ typedef struct kfmon_watch_list {
 } kfmon_watch_list_t;
 
 // Used as the reply handler in our polling loops.
-// Second argument is an opaque double-pointer used for storage in a linked list (or NULL if uneeded).
+// Second argument is an opaque double-pointer used for storage in a linked list
+// (i.e., a mutable pointer to the address of the current node; or NULL if no storage is needed).
 typedef int (*ipc_handler_t)(int, void **);
 
 // Given one of the error codes listed above, return properly from an action. Success is silent.

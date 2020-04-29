@@ -147,10 +147,10 @@ static int handle_list_reply(int data_fd, void **data) {
         // Store that in the list
         kfmon_watch_list_t* node = (kfmon_watch_list_t*) *data;
         NM_LOG("data was %p // node was %p", data, node);
-        // If the current link is the head of the list, it's still empty, we can use it.
-        // Otherwise, create a new link instead.
+        // If the current node is the head of the list, it's still empty, we can use it.
+        // Otherwise, create a new node instead.
         if (node->watch.label) {
-            // Current link is already in use, setup a new link in the chain
+            // Current node is already in use, setup a new node in the list
             node->next = calloc(1, sizeof(kfmon_watch_list_t));
             if (!node->next) {
                 status = KFMON_IPC_CALLOC_FAILURE;
@@ -354,16 +354,17 @@ int nm_kfmon_list_request(const char *restrict foo __attribute__((unused))) {
         return status;
     }
 
-    // We'll want to retrive our watch list in here.
+    // We'll want to retrive our watch list in there.
     kfmon_watch_list_t *head = calloc(1, sizeof(kfmon_watch_list_t));
     if (!head) {
         close(data_fd);
         return KFMON_IPC_CALLOC_FAILURE;
     }
     NM_LOG("Head is at %p", head);
-    // We'll need a modifiable pointer to the *current* node in the list
+    // We'll need a mutable pointer to the *current* node in the list
     kfmon_watch_list_t **cur = &head;
     NM_LOG("Cursor is at %p", cur);
+
     // We'll be polling the socket for a reply, this'll make things neater, and allows us to abort on timeout,
     // in the unlikely event there's already an IPC session being handled by KFMon,
     // in which case the reply would be delayed by an undeterminate amount of time (i.e., until KFMon gets to it).
