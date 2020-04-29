@@ -145,9 +145,8 @@ static int handle_list_reply(int data_fd, void **data) {
         }
 
         // Store that in the list
-        kfmon_watch_list_t** cur = (kfmon_watch_list_t**) data;
-        NM_LOG("data was %p // cur was %p", data, cur);
-        kfmon_watch_list_t* node = *cur;
+        kfmon_watch_list_t* node = (kfmon_watch_list_t*) *data;
+        NM_LOG("data was %p // node was %p", data, node);
         node->watch.idx = strtoul(watch_idx, NULL, 10);
         node->watch.filename = strdup(filename);
         node->watch.label = label ? strdup(label) : strdup(filename);
@@ -158,8 +157,8 @@ static int handle_list_reply(int data_fd, void **data) {
             break;
         }
         // Update the cursor
-        cur = &node->next;
-        NM_LOG("data is %p // cur is %p", data, cur);
+        data = (void **) &node->next;
+        NM_LOG("data is %p", data);
     }
 
     // Are we really done?
