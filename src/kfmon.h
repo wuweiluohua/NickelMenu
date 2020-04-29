@@ -36,6 +36,9 @@ extern "C" {
 // Not an error either, needs we have more to read...
 #define KFMON_IPC_EAGAIN                   (1 << 20)
 
+// Used as the reply handler in our polling loops
+typedef int (*ipc_handler_t)(int);
+
 // Given one of the error codes listed above, return properly from an action. Success is silent.
 nm_action_result_t* nm_kfmon_return_handler(int error, char **err_out);
 
