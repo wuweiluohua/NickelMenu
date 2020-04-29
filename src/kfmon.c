@@ -94,9 +94,12 @@ static int handle_list_reply(int data_fd) {
     }
 
     // NOTE: Replies may be split across multiple reads (and as such, multiple handle_list_reply calls).
-    //       So the only way we can be sure that we're done (short of timing out after a while of no POLLIN revents),
-    //       if to check that the final byte we've just read is a NUL, as that's how KFMon terminates a list.
+    //       So the only way we can be sure that we're done (short of timing out after a while of no POLLIN revents,
+    //       which would be stupid), is to check that the final byte we've just read is a NUL,
+    //       as that's how KFMon terminates a list.
     bool eot = false;
+    // NOTE: The parsing code later does its own take on this to detect the final line,
+    //       but this one should be authoritative, as strsep modifies the data.
     if (buf[len - 1] == '\0') {
         eot = true;
     }
