@@ -147,18 +147,23 @@ static int handle_list_reply(int data_fd, void **data) {
         // Store that in the list
         kfmon_watch_list_t* node = (kfmon_watch_list_t*) *data;
         NM_LOG("data was %p // node was %p", data, node);
-        node->watch.idx = strtoul(watch_idx, NULL, 10);
+        // If the current link is the head of the list, it's still empty, we can use it.
+        // Otherwise, create a new link instead.
+        if (node->watch.label) {
+            // Current link is already in use, setup a new link in the chain
+            node->next = calloc(1, sizeof(kfmon_watch_list_t));
+            if (!node->next) {
+                status = KFMON_IPC_CALLOC_FAILURE;
+                break;
+            }
+            node = node->next;
+        }
+        node->watch.idx = (uint8_t) strtoul(watch_idx, NULL, 10);
         node->watch.filename = strdup(filename);
         node->watch.label = label ? strdup(label) : strdup(filename);
-        // Setup net link in the chain
-        node->next = calloc(1, sizeof(kfmon_watch_list_t));
-        if (!node->next) {
-            status = KFMON_IPC_CALLOC_FAILURE;
-            break;
-        }
         // Update the cursor
-        data = (void **) &node->next;
-        NM_LOG("data is %p", data);
+        data = (void **) &node;
+        NM_LOG("node is %p // data is %p", node, data);
     }
 
     // Are we really done?

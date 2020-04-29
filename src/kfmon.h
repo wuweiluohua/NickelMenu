@@ -50,7 +50,8 @@ typedef struct kfmon_watch_list {
     struct kfmon_watch_list* next;
 } kfmon_watch_list_t;
 
-// Used as the reply handler in our polling loops
+// Used as the reply handler in our polling loops.
+// Second argument is an opaque double-pointer used for storage in a linked list (or NULL if uneeded).
 typedef int (*ipc_handler_t)(int, void **);
 
 // Given one of the error codes listed above, return properly from an action. Success is silent.
