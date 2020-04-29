@@ -15,7 +15,7 @@
 #include "kfmon.h"
 
 // Handle replies from the IPC socket
-static int handle_reply(int data_fd) {
+static int handle_reply(int data_fd, void **data __attribute__((unused))) {
     // Eh, recycle PIPE_BUF, it should be more than enough for our needs.
     char buf[PIPE_BUF] = { 0 };
 
@@ -57,7 +57,7 @@ static int handle_reply(int data_fd) {
 }
 
 // Handle replies from a 'list' command
-static int handle_list_reply(int data_fd) {
+static int handle_list_reply(int data_fd, void **data) {
     // Can't do it on the stack because of strsep
     char *buf = NULL;
     buf = calloc(PIPE_BUF, sizeof(*buf));
@@ -143,6 +143,23 @@ static int handle_list_reply(int data_fd) {
         } else {
             NM_LOG("label -> filename");
         }
+
+        // Store that in the list
+        kfmon_watch_list_t** cur = (kfmon_watch_list_t**) data;
+        NM_LOG("data was %p // cur was %p", data, cur);
+        kfmon_watch_list_t* node = *cur;
+        node->watch.idx = strtoul(watch_idx, NULL, 10);
+        node->watch.filename = strdup(filename);
+        node->watch.label = label ? strdup(label) : strdup(filename);
+        // Setup net link in the chain
+        node->next = calloc(1, sizeof(kfmon_watch_list_t));
+        if (!node->next) {
+            status = KFMON_IPC_CALLOC_FAILURE;
+            break;
+        }
+        // Update the cursor
+        cur = &node->next;
+        NM_LOG("data is %p // cur is %p", data, cur);
     }
 
     // Are we really done?
@@ -206,7 +223,7 @@ static int send_ipc_command(int data_fd, const char *restrict ipc_cmd, const cha
 }
 
 // Poll the IPC socket for potentially *multiple* replies to a single command, timeout after attempts * timeout (ms)
-static int wait_for_replies(int data_fd, int timeout, size_t attempts, ipc_handler_t reply_handler) {
+static int wait_for_replies(int data_fd, int timeout, size_t attempts, ipc_handler_t reply_handler, void **data) {
     int status = EXIT_SUCCESS;
 
     struct pollfd pfd = { 0 };
@@ -228,7 +245,7 @@ static int wait_for_replies(int data_fd, int timeout, size_t attempts, ipc_handl
         if (poll_num > 0) {
             if (pfd.revents & POLLIN) {
                 // There was a reply from the socket
-                int reply = reply_handler(data_fd);
+                int reply = reply_handler(data_fd, data);
                 if (reply != EXIT_SUCCESS) {
                     // If the remote closed the connection, we get POLLIN|POLLHUP w/ EoF ;).
                     if (pfd.revents & POLLHUP) {
@@ -302,7 +319,7 @@ int nm_kfmon_simple_request(const char *restrict ipc_cmd, const char *restrict i
     // in which case the reply would be delayed by an undeterminate amount of time (i.e., until KFMon gets to it).
     // Here, we'll want to timeout after 2s
     ipc_handler_t handler = &handle_reply;
-    status = wait_for_replies(data_fd, 500, 4, handler);
+    status = wait_for_replies(data_fd, 500, 4, handler, NULL);
     // NOTE: We happen to be done with the connection right now.
     //       But if we still needed it, KFMON_IPC_POLL_FAILURE would warrant an early abort w/ a forced close().
 
@@ -333,14 +350,52 @@ int nm_kfmon_list_request(const char *restrict foo __attribute__((unused))) {
         return status;
     }
 
+    // We'll want to retrive our watch list in here.
+    kfmon_watch_list_t *head = calloc(1, sizeof(kfmon_watch_list_t));
+    if (!head) {
+        close(data_fd);
+        return KFMON_IPC_CALLOC_FAILURE;
+    }
+    NM_LOG("Head is at %p", head);
+    // We'll need a modifiable pointer to the *current* node in the list
+    kfmon_watch_list_t **cur = &head;
+    NM_LOG("Cursor is at %p", cur);
     // We'll be polling the socket for a reply, this'll make things neater, and allows us to abort on timeout,
     // in the unlikely event there's already an IPC session being handled by KFMon,
     // in which case the reply would be delayed by an undeterminate amount of time (i.e., until KFMon gets to it).
     // Here, we'll want to timeout after 2s
     ipc_handler_t handler = &handle_list_reply;
-    status = wait_for_replies(data_fd, 500, 4, handler);
+    status = wait_for_replies(data_fd, 500, 4, handler, (void **) cur);
     // NOTE: We happen to be done with the connection right now.
     //       But if we still needed it, KFMON_IPC_POLL_FAILURE would warrant an early abort w/ a forced close().
+
+    // Walk the list
+    NM_LOG("Head is now at %p", head);
+    kfmon_watch_list_t* cursor = head;
+    while (cursor != NULL) {
+        NM_LOG("Dumping cursor %p", cursor);
+        NM_LOG("idx: %hhu // filename: %s // label: %s", cursor->watch.idx, cursor->watch.filename, cursor->watch.label);
+        cursor = cursor->next;
+    }
+
+    // Destroy it
+    if (head != NULL) {
+        cursor = head->next;
+        head->next = NULL;
+        while (cursor != NULL) {
+            NM_LOG("Freeing cursor %p", cursor);
+            kfmon_watch_list_t* tmp = cursor->next;
+            free(cursor->watch.filename);
+            free(cursor->watch.label);
+            free(cursor);
+            cursor = tmp;
+        }
+        NM_LOG("Freeing head %p", head);
+        free(head->watch.filename);
+        free(head->watch.label);
+        free(head);
+    }
+
 
     // Bye now!
     close(data_fd);

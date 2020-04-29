@@ -4,6 +4,7 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
 #include "action.h"
 
 // Path to KFMon's IPC Unix socket
@@ -36,8 +37,21 @@ extern "C" {
 // Not an error either, needs we have more to read...
 #define KFMON_IPC_EAGAIN                   (1 << 20)
 
+// A single watch item
+typedef struct {
+    uint8_t idx;
+    char *filename;
+    char *label;
+} kfmon_watch_t;
+
+// A linked list of watches
+typedef struct kfmon_watch_list {
+    kfmon_watch_t watch;
+    struct kfmon_watch_list* next;
+} kfmon_watch_list_t;
+
 // Used as the reply handler in our polling loops
-typedef int (*ipc_handler_t)(int);
+typedef int (*ipc_handler_t)(int, void **);
 
 // Given one of the error codes listed above, return properly from an action. Success is silent.
 nm_action_result_t* nm_kfmon_return_handler(int error, char **err_out);
