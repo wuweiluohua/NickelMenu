@@ -179,10 +179,16 @@ static int send_packet(int data_fd, const char *restrict payload, size_t len) {
     return EXIT_SUCCESS;
 }
 
-// Send the requested IPC command:arg pair
+// Send the requested IPC command:arg pair (or command alone if arg is NULL)
 static int send_ipc_command(int data_fd, const char *restrict ipc_cmd, const char *restrict ipc_arg) {
     char buf[256] = { 0 };
-    int packet_len = snprintf(buf, sizeof(buf), "%s:%s", ipc_cmd, ipc_arg);
+    int packet_len = 0;
+    // Somme commands don't require an arg
+    if (ipc_arg) {
+        packet_len = snprintf(buf, sizeof(buf), "%s:%s", ipc_cmd, ipc_arg);
+    } else {
+        packet_len = snprintf(buf, sizeof(buf), "%s", ipc_cmd);
+    }
     // Send it (w/ a NUL)
     return send_packet(data_fd, buf, (size_t) (packet_len + 1));
 }
