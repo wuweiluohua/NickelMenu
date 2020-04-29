@@ -300,7 +300,7 @@ int nm_kfmon_simple_request(const char *restrict ipc_cmd, const char *restrict i
 }
 
 // PoC handling of a list request
-int nm_kfmon_list_request(void) {
+int nm_kfmon_list_request(const char *restrict foo __attribute__((unused))) {
     // Assume everything's peachy until shit happens...
     int status = EXIT_SUCCESS;
 

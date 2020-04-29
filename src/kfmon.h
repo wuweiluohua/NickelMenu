@@ -46,7 +46,7 @@ nm_action_result_t* nm_kfmon_return_handler(int error, char **err_out);
 int nm_kfmon_simple_request(const char *restrict ipc_cmd, const char *restrict ipc_arg);
 
 // PoC list test action
-int nm_kfmon_list_request(void);
+int nm_kfmon_list_request(const char *restrict foo);
 
 #ifdef __cplusplus
 }
