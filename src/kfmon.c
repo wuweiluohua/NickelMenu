@@ -363,7 +363,7 @@ int nm_kfmon_list_request(const char *restrict foo __attribute__((unused))) {
         return KFMON_IPC_CALLOC_FAILURE;
     }
     NM_LOG("Head is at %p", head);
-    // We'll need a mutable pointer to the *current* tail in the list
+    // We'll need a mutable pointer to the list's tail, so that we can update & follow it
     kfmon_watch_list_t *tail = head;
     kfmon_watch_list_t **cur = &tail;
     NM_LOG("Cursor is at %p", cur);
