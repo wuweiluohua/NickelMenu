@@ -14,8 +14,47 @@
 #include "kfmon_helpers.h"
 #include "kfmon.h"
 
+// Free all resources allocated by a list and its nodes
+static void teardown_list(kfmon_watch_list_t* list) {
+    kfmon_watch_node_t* node = list->head;
+    while (node) {
+        NM_LOG("Freeing node at %p", node);
+        kfmon_watch_node_t* p = node->next;
+        free(node->watch.filename);
+        free(node->watch.label);
+        free(node);
+        node = p;
+    }
+    // Don't leave dangling pointers
+    list->head = NULL;
+    list->tail = NULL;
+}
+
+// Allocate a single new node to the list
+static int grow_list(kfmon_watch_list_t* list) {
+    kfmon_watch_node_t* prev = list->tail;
+    kfmon_watch_node_t* node = calloc(1, sizeof(*node));
+    if (!node) {
+        return KFMON_IPC_CALLOC_FAILURE;
+    }
+    list->count++;
+
+    // Update the head if this is the first node
+    if (!list->head) {
+        list->head = node;
+    }
+    // Update the tail pointer
+    list->tail = node;
+    // If there was a previous node, link the two together
+    if (prev) {
+        prev->next = node;
+    }
+
+    return EXIT_SUCCESS;
+}
+
 // Handle replies from the IPC socket
-static int handle_reply(int data_fd, void **data __attribute__((unused))) {
+static int handle_reply(int data_fd, void *data __attribute__((unused))) {
     // Eh, recycle PIPE_BUF, it should be more than enough for our needs.
     char buf[PIPE_BUF] = { 0 };
 
@@ -57,7 +96,7 @@ static int handle_reply(int data_fd, void **data __attribute__((unused))) {
 }
 
 // Handle replies from a 'list' command
-static int handle_list_reply(int data_fd, void **data) {
+static int handle_list_reply(int data_fd, void *data) {
     // Can't do it on the stack because of strsep
     char *buf = NULL;
     buf = calloc(PIPE_BUF, sizeof(*buf));
@@ -146,26 +185,20 @@ static int handle_list_reply(int data_fd, void **data) {
             NM_LOG("label -> filename");
         }
 
-        // Store that in the list
-        kfmon_watch_list_t* node = (kfmon_watch_list_t*) *data;
-        NM_LOG("*data was %p // node was %p", *data, node);
-        // If the current node is the head of the list, it's still empty, we can use it.
-        // Otherwise, create a new node instead.
-        if (node->watch.label) {
-            // Current node is already in use, setup a new node in the list
-            node->next = calloc(1, sizeof(kfmon_watch_list_t));
-            if (!node->next) {
-                status = KFMON_IPC_CALLOC_FAILURE;
-                break;
-            }
-            node = node->next;
+        // Store that at the tail of the list
+        kfmon_watch_list_t* list = (kfmon_watch_list_t*) data;
+        // Make room for a new node
+        if (grow_list(list) != EXIT_SUCCESS) {
+            status = KFMON_IPC_CALLOC_FAILURE;
+            break;
         }
+        // Use it
+        kfmon_watch_node_t* node = list->tail;
+        NM_LOG("New node at %p", node);
+
         node->watch.idx = (uint8_t) strtoul(watch_idx, NULL, 10);
         node->watch.filename = strdup(filename);
         node->watch.label = label ? strdup(label) : strdup(filename);
-        // Update the pointer to the current tail
-        *data = node;
-        NM_LOG("node is %p // *data is %p", node, *data);
     }
 
     // Are we really done?
@@ -356,47 +389,31 @@ int nm_kfmon_list_request(const char *restrict foo __attribute__((unused))) {
         return status;
     }
 
-    // We'll want to retrive our watch list in there.
-    kfmon_watch_list_t *head = calloc(1, sizeof(kfmon_watch_list_t));
-    if (!head) {
-        close(data_fd);
-        return KFMON_IPC_CALLOC_FAILURE;
-    }
-    NM_LOG("Head is at %p", head);
-    // We'll need a mutable pointer to the list's tail, so that we can update & follow it
-    kfmon_watch_list_t *tail = head;
-    kfmon_watch_list_t **cur = &tail;
-    NM_LOG("Cursor is at %p", cur);
+    // We'll want to retrieve our watch list in there.
+    kfmon_watch_list_t list = { 0 };
 
     // We'll be polling the socket for a reply, this'll make things neater, and allows us to abort on timeout,
     // in the unlikely event there's already an IPC session being handled by KFMon,
     // in which case the reply would be delayed by an undeterminate amount of time (i.e., until KFMon gets to it).
     // Here, we'll want to timeout after 2s
     ipc_handler_t handler = &handle_list_reply;
-    status = wait_for_replies(data_fd, 500, 4, handler, (void **) cur);
+    status = wait_for_replies(data_fd, 500, 4, handler, (void *) &list);
     // NOTE: We happen to be done with the connection right now.
     //       But if we still needed it, KFMON_IPC_POLL_FAILURE would warrant an early abort w/ a forced close().
 
     // Walk the list
-    NM_LOG("Head is still at %p", head);
-    NM_LOG("Tail is now   at %p", tail);
-    kfmon_watch_list_t* node = head;
-    while (node != NULL) {
-        NM_LOG("Dumping node %p", node);
+    NM_LOG("List has %zu nodes", list.count);
+    NM_LOG("Head is at %p", list.head);
+    NM_LOG("Tail is at %p", list.tail);
+    kfmon_watch_node_t* node = list.head;
+    while (node) {
+        NM_LOG("Dumping node at %p", node);
         NM_LOG("idx: %hhu // filename: %s // label: %s", node->watch.idx, node->watch.filename, node->watch.label);
         node = node->next;
     }
 
     // Destroy it
-    node = head;
-    while (node != NULL) {
-        NM_LOG("Freeing node %p", node);
-        kfmon_watch_list_t* p = node->next;
-        free(node->watch.filename);
-        free(node->watch.label);
-        free(node);
-        node = p;
-    }
+    teardown_list(&list);
 
     // Bye now!
     close(data_fd);

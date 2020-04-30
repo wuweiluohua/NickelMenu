@@ -4,6 +4,7 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #include <stdint.h>
 #include "action.h"
 
@@ -44,16 +45,23 @@ typedef struct {
     char *label;
 } kfmon_watch_t;
 
-// A linked list of watches
-typedef struct kfmon_watch_list {
+// A node in a linked list of watches
+typedef struct kfmon_watch_node {
     kfmon_watch_t watch;
-    struct kfmon_watch_list* next;
+    struct kfmon_watch_node* next;
+} kfmon_watch_node_t;
+
+// A control structure to keep track of a list of watches
+typedef struct {
+    size_t count;
+    kfmon_watch_node_t* head;
+    kfmon_watch_node_t* tail;
 } kfmon_watch_list_t;
 
 // Used as the reply handler in our polling loops.
-// Second argument is an opaque double-pointer used for storage in a linked list
-// (i.e., a mutable pointer to the address of the list's tail; or NULL if no storage is needed).
-typedef int (*ipc_handler_t)(int, void **);
+// Second argument is an opaque pointer used for storage in a linked list
+// (e.g., a pointer to a kfmon_watch_list_t, or NULL if no storage is needed).
+typedef int (*ipc_handler_t)(int, void *);
 
 // Given one of the error codes listed above, return properly from an action. Success is silent.
 nm_action_result_t* nm_kfmon_return_handler(int error, char **err_out);
