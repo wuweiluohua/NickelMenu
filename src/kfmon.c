@@ -376,31 +376,23 @@ int nm_kfmon_list_request(const char *restrict foo __attribute__((unused))) {
 
     // Walk the list
     NM_LOG("Head is still at %p", head);
-    kfmon_watch_list_t* cursor = head;
-    while (cursor != NULL) {
-        NM_LOG("Dumping cursor %p", cursor);
-        NM_LOG("idx: %hhu // filename: %s // label: %s", cursor->watch.idx, cursor->watch.filename, cursor->watch.label);
-        cursor = cursor->next;
+    kfmon_watch_list_t* node = head;
+    while (node != NULL) {
+        NM_LOG("Dumping node %p", node);
+        NM_LOG("idx: %hhu // filename: %s // label: %s", node->watch.idx, node->watch.filename, node->watch.label);
+        node = node->next;
     }
 
     // Destroy it
-    if (head != NULL) {
-        cursor = head->next;
-        head->next = NULL;
-        while (cursor != NULL) {
-            NM_LOG("Freeing cursor %p", cursor);
-            kfmon_watch_list_t* tmp = cursor->next;
-            free(cursor->watch.filename);
-            free(cursor->watch.label);
-            free(cursor);
-            cursor = tmp;
-        }
-        NM_LOG("Freeing head %p", head);
-        free(head->watch.filename);
-        free(head->watch.label);
-        free(head);
+    node = head;
+    while (node != NULL) {
+        NM_LOG("Freeing node %p", node);
+        kfmon_watch_list_t* p = node->next;
+        free(node->watch.filename);
+        free(node->watch.label);
+        free(node);
+        node = p;
     }
-
 
     // Bye now!
     close(data_fd);
