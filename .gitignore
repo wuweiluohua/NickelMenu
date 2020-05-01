@@ -15,6 +15,8 @@ NickelMenu.kdev4
 /src/action.o
 /src/action_c.o
 /src/config.o
+/src/kfmon.o
+/src/action.o
 /src/dlhook.o
 /src/failsafe.o
 /src/init.o
