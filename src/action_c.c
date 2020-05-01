@@ -1,7 +1,7 @@
 #define _GNU_SOURCE // asprintf
 
-#include "kfmon.h"
 #include "action.h"
+#include "kfmon.h"
 #include "util.h"
 
 NM_ACTION_(dbg_syslog) {
