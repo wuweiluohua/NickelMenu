@@ -38,6 +38,12 @@ NM_ACTION_(kfmon_id) {
 NM_ACTION_(kfmon) {
     // Trigger a watch, given its trigger basename. Stable runtime lookup done by KFMon.
     int status = nm_kfmon_simple_request("trigger", arg);
+
+    // Fixup INVALID_ID to INVALID_NAME for slightly clearer feedback (see e8b2588 for details).
+    if (status == KFMON_IPC_ERR_INVALID_ID) {
+        status = KFMON_IPC_ERR_INVALID_NAME;
+    }
+
     return nm_kfmon_return_handler(status, err_out);
 }
 

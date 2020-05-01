@@ -453,7 +453,9 @@ nm_action_result_t* nm_kfmon_return_handler(int status, char **err_out) {
         } else if (status == KFMON_IPC_LIST_PARSE_FAILURE) {
             NM_RETURN_ERR("Failed to parse the list of watches (no separator found)");
         } else if (status == KFMON_IPC_ERR_INVALID_ID) {
-            NM_RETURN_ERR("Requested to start an invalid watch");
+            NM_RETURN_ERR("Requested to start an invalid watch index");
+        } else if (status == KFMON_IPC_ERR_INVALID_NAME) {
+            NM_RETURN_ERR("Requested to trigger an invalid watch filename");
         } else if (status == KFMON_IPC_WARN_ALREADY_RUNNING) {
             NM_RETURN_ERR("Requested watch is already running");
         } else if (status == KFMON_IPC_WARN_SPAWN_BLOCKED) {

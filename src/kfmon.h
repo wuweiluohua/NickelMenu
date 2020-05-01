@@ -26,17 +26,18 @@ extern "C" {
 #define KFMON_IPC_LIST_PARSE_FAILURE       (1 << 11)
 // Those match the actual string sent over the wire
 #define KFMON_IPC_ERR_INVALID_ID           (1 << 12)
-#define KFMON_IPC_WARN_ALREADY_RUNNING     (1 << 13)
-#define KFMON_IPC_WARN_SPAWN_BLOCKED       (1 << 14)
-#define KFMON_IPC_WARN_SPAWN_INHIBITED     (1 << 15)
-#define KFMON_IPC_ERR_REALLY_MALFORMED_CMD (1 << 16)
-#define KFMON_IPC_ERR_MALFORMED_CMD        (1 << 17)
-#define KFMON_IPC_ERR_INVALID_CMD          (1 << 18)
+#define KFMON_IPC_ERR_INVALID_NAME         (1 << 13)
+#define KFMON_IPC_WARN_ALREADY_RUNNING     (1 << 14)
+#define KFMON_IPC_WARN_SPAWN_BLOCKED       (1 << 15)
+#define KFMON_IPC_WARN_SPAWN_INHIBITED     (1 << 16)
+#define KFMON_IPC_ERR_REALLY_MALFORMED_CMD (1 << 17)
+#define KFMON_IPC_ERR_MALFORMED_CMD        (1 << 18)
+#define KFMON_IPC_ERR_INVALID_CMD          (1 << 19)
 // Not an error ;p
 //#define KFMON_IPC_OK
-#define KFMON_IPC_UNKNOWN_REPLY            (1 << 19)
+#define KFMON_IPC_UNKNOWN_REPLY            (1 << 20)
 // Not an error either, needs we have more to read...
-#define KFMON_IPC_EAGAIN                   (1 << 20)
+#define KFMON_IPC_EAGAIN                   (1 << 21)
 
 // A single watch item
 typedef struct {
