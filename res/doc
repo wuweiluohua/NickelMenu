@@ -67,6 +67,7 @@
 #   menu_item :main   :Do Nothing     :cmd_spawn      :sleep 60
 #   menu_item :main   :Kernel Version :cmd_output     :500:uname -a
 #   menu_item :main   :Sketch Pad     :nickel_extras  :Sketch Pad
+#   menu_item :main   :Plato          :kfmon          :plato.png
 #   menu_item :reader :Invert Screen  :nickel_setting :invert
 #
 # You will need to reboot to see any changes.
