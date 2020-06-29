@@ -1,0 +1,263 @@
+{
+    "menus": {
+        "main": {
+            "desc": "the menu in the top-left corner of the home screen",
+            "items": [
+                ["Home"],
+                ["My Books", "My Collections", "My Articles"],
+                ["Kobo Store", "Recommended", "Wishlist"],
+                ["Activity"],
+                [null],
+                ["Settings", "Help"]
+            ]
+        },
+        "reader": {
+            "desc": "the overflow menu in the reader",
+            "items": [["View Details", null, "Dictionary"]]
+        }
+    },
+    "actions": {
+        "cmd_spawn": {
+            "desc": "starts another process or script in the background",
+            "args": [{
+                "name": "quiet",
+                "desc": "prevents the toast with the process PID from being displayed",
+                "optional": true,
+                "type": {"bool_opt": {}}
+            }, {
+                "name": "cmdline",
+                "desc": "the command line to pass to /bin/sh -c (started in /)",
+                "optional": false,
+                "type": {"string": {"colons": true}}
+            }]
+        },
+        "cmd_output": {
+            "desc": "runs a command and displays the output",
+            "args": [{
+                "name": "timeout",
+                "desc": "the timeout in milliseconds (0 < t < 10000), a colon, then the command line to pass to /bin/sh -c (started in /)",
+                "optional": false,
+                "type": {"int": {"min": 0, "max": 10000, "unit": "ms"}}
+            }, {
+                "name": "quiet",
+                "desc": "prevents the message box with the output from being displayed (i.e. you'd use this where you'd normally use >/dev/null 2>&1)",
+                "optional": true,
+                "type": {"bool_opt": {}}
+            }, {
+                "name": "cmdline",
+                "desc": "the command line to pass to /bin/sh -c (started in /)",
+                "optional": false,
+                "type": {"string": {"colons": true}}
+            }]
+        },
+        "dbg_syslog": {
+            "desc": "writes a message to syslog (for testing)",
+            "args": [{
+                "name": "message",
+                "desc": "the text to write",
+                "optional": false,
+                "type": {"string": {"colons": true}}
+            }]
+        },
+        "dbg_error": {
+            "desc": "always returns an error (for testing)",
+            "args": [{
+                "name": "message",
+                "desc": "the error message",
+                "optional": false,
+                "type": {"string": {"colons": true}}
+            }]
+        },
+        "dbg_msg": {
+            "desc": "shows a message (for testing)",
+            "args": [{
+                "name": "message",
+                "desc": "the message",
+                "optional": false,
+                "type": {"string": {"colons": true}}
+            }]
+        },
+        "dbg_toast": {
+            "desc": "shows a toast (for testing)",
+            "args": [{
+                "name": "message",
+                "desc": "the text to write",
+                "optional": false,
+                "type": {"string": {"colons": true}}
+            }]
+        },
+        "kfmon": {
+            "desc": "triggers a kfmon action",
+            "args": [{
+                "name": "filename",
+                "desc": "the filename of the KFMon watched item to launch\nThis is actually the basename of the watch's filename as specified in its KFMon config (i.e., the png).\nYou can also check the output of the 'list' command via the kfmon-ipc tool.",
+                "optional": false,
+                "type": {"string": {"colons": true}}
+            }]
+        },
+        "nickel_setting": {
+            "desc": "changes a boolean setting",
+            "args": [{
+                "name": "setting",
+                "desc": "the setting to change",
+                "optional": false,
+                "type": {
+                    "enum": {
+                        "invert": {"desc": "FeatureSettings.InvertScreen"},
+                        "lockscreen": {"desc": "PowerSettings.UnlockEnabled (4.12.12111+)"},
+                        "screenshots": {"desc": "FeatureSettings.Screenshots"},
+                        "force_wifi": {"desc": "DeveloperSettings.ForceWifiOn"}
+                    }
+                }
+            }, {
+                "name": "value",
+                "desc": "the new setting value (toggles if not provided)",
+                "optional": true,
+                "type": {"bool": {}}
+            }]
+        },
+        "nickel_extras": {
+            "desc": "opens one of the beta features",
+            "args": [{
+                "name": "feature",
+                "desc": "the feature to launch",
+                "optional": false,
+                "type": {
+                    "enum": {
+                        "web_browser": "Web Browser",
+                        "unblock_it": "Rush Hour",
+                        "sketch_pad": "Sketch Pad",
+                        "solitaire": "Solitaire",
+                        "sudoku": "Sudoku",
+                        "word_scramble": "Word Scramble"
+                    }
+                }
+            }],
+            "args_cond": [{
+                "if_arg": "feature",
+                "if_val": "web_browser",
+                "args": [{
+                    "name": "modal",
+                    "desc": "opens the browser as a pop-up window",
+                    "optional": true,
+                    "type": {"bool_opt": {}}
+                }, {
+                    "name": "url",
+                    "desc": "the URL to open",
+                    "optional": true,
+                    "type": {"string": {"colons": true, "no_spaces": true}}
+                }],
+                "args_cond": [{
+                    "if_arg": "url",
+                    "args": [{
+                        "name": "css",
+                        "desc": "custom CSS to add to all pages",
+                        "optional": true,
+                        "space": true,
+                        "type": {"string": {"colons": true}}
+                    }]
+                }]
+            }]
+        },
+        "nickel_misc": {
+            "desc": "other stuff which isn't significant enough for its own category",
+            "args": [{
+                "name": "action",
+                "desc": "the action",
+                "optional": false,
+                "type": {
+                    "enum": {
+                        "home": "goes to the home screen",
+                        "force_usb_connection": "forces a usb connection dialog to be shown",
+                        "rescan_books": "forces nickel to rescan books (4.13.12638+)",
+                        "rescan_books_full": "forces a full usb connect/disconnect cycle (4.13.12638+)"
+                    }
+                }
+            }]
+        },
+        "nickel_open": {
+            "desc": "opens a view",
+            "args": [{
+                "name": "view",
+                "desc": "the view to open",
+                "optional": false,
+                "type": {
+                    "enum": {
+                        "discover:storefront": "Kobo Store",
+                        "discover:wishlist": "Wishlist",
+                        "library:library": "My Books (with last filter)",
+                        "library:library2": "My Books (with last tab and filter)",
+                        "library:all": "Books",
+                        "library:authors": "Authors",
+                        "library:series": "Series (4.20.14601+)",
+                        "library:shelves": "Collections",
+                        "library:pocket": "Articles",
+                        "library:dropbox": "Dropbox (4.18.13737+)",
+                        "reading_life:reading_life": "Activity (with last tab)",
+                        "reading_life:stats": "Activity",
+                        "reading_life:awards": "Awards",
+                        "reading_life:words": "My Words",
+                        "store:overdrive": "OverDrive (note: if you don't have an active OverDrive account, it will give you a 'Network Error') (4.10.11655+)",
+                        "store:search": "Search"
+                    }
+                }
+            }]
+        },
+        "nickel_wifi": {
+            "desc": "controls wifi (note: it doesn't wait for it to connect or disconnect, neither does it check for success)",
+            "args": [{
+                "name": "action",
+                "desc": "the action",
+                "optional": false,
+                "type": {
+                    "enum": {
+                        "autoconnect": "attempts to enable and connect to wifi (similar to what happens when you open a link)",
+                        "autoconnect_silent": "attempts to connect to wifi in the background (does nothing if wifi is disabled, the battery is low, is already connected, or there aren't any known networks in range) (no errors are shown) (similar to what happens when you turn on the Kobo)",
+                        "enable": "enables WiFi (but doesn't necessarily connect to it)",
+                        "disable": "disables WiFi",
+                        "toggle": "toggles WiFi (but doesn't necessarily connect to it)"
+                    }
+                }
+            }]
+        },
+        "power": {
+            "desc": "gracefully controls the power state",
+            "args": [{
+                "name": "action",
+                "desc": "the action",
+                "optional": false,
+                "type": {
+                    "enum": {
+                        "shutdown": "shuts down (4.13.12638+)",
+                        "reboot": "reboots (4.13.12638+)"
+                    }
+                }
+            }]
+        },
+        "skip": {
+            "desc": "skips a number of actions after the current one (mainly useful for more complex conditional chains) (this action will not update the success/failure flag)",
+            "args": [{
+                "name": "actions",
+                "desc": "the number of actions to skip, or -1 to skip all remaining ones (i.e. end the chain)",
+                "optional": false,
+                "type": {"int": {"min": -1, "unit": "actions"}}
+            }]
+        }
+    },
+    "generators": {
+        "kfmon": {
+            "desc": "adds items from kfmon",
+            "args": [{
+                "name": "filter",
+                "desc": "controls which watches to show",
+                "optional": true,
+                "type": {
+                    "enum": {
+                        "gui": "only enumerate non-hidden active KFMon watches (this is the default)",
+                        "all": "enumerate *every* active KFMon watch"
+                    }
+                }
+            }]
+        }
+    }
+}
